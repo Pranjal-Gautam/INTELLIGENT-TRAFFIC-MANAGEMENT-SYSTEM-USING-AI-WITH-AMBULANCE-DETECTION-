@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Upload Videos</title>
+    <style>
+        body {
+            background: linear-gradient(135deg, #1e1e3f, #3a3a6f);
+            color: white;
+            font-family: Arial;
+            padding: 30px;
+        }
+
+        input {
+            margin: 10px 0;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 10px;
+            background: linear-gradient(to right, #6a11cb, #ff6a00);
+            border: none;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+<h2>Upload Lane Videos</h2>
+
+<form method="POST" enctype="multipart/form-data">
+    Lane 1: <input type="file" name="lane1"><br>
+    Lane 2: <input type="file" name="lane2"><br>
+    Lane 3: <input type="file" name="lane3"><br>
+    Lane 4: <input type="file" name="lane4"><br>
+
+    <button type="submit">Upload and Start</button>
+</form>
+
+</body>
+</html>

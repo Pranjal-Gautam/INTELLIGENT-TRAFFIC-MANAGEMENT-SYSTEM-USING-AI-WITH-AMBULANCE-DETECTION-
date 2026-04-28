@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Live Traffic Dashboard</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial;
+            background: #f2f2f2;
+            text-align: center;
+        }
+
+        h2 {
+            margin-top: 20px;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .lane-box {
+            display: flex;
+            align-items: center;
+            background: white;
+            border-radius: 10px;
+            padding: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+        }
+
+        .video-box {
+            flex: 1;
+        }
+
+        img {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+
+        .signal {
+            width: 70px;
+            margin-left: 10px;
+            padding: 10px;
+            background: #ddd;
+            border-radius: 10px;
+        }
+
+        .light {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            margin: 10px auto;
+            opacity: 0.3;
+        }
+
+        .red { background: red; }
+        .yellow { background: orange; }
+        .green { background: green; }
+
+        .active {
+            opacity: 1;
+            box-shadow: 0 0 10px rgba(0,0,0,0.6);
+        }
+
+        .info {
+            font-size: 12px;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+
+<body>
+
+<h2>Live Traffic Dashboard</h2>
+
+<div class="container">
+
+    {% for i in range(videos|length) %}
+    <div class="lane-box">
+
+        <!-- VIDEO -->
+        <div class="video-box">
+            <img src="{{ url_for('video_feed', lane=i) }}">
+
+            <div class="info" id="info{{i}}">
+                Lane {{ i+1 }} | Loading...
+            </div>
+        </div>
+
+        <!-- TRAFFIC LIGHT -->
+        <div class="signal">
+            <div class="light red" id="red{{i}}"></div>
+            <div class="light yellow" id="yellow{{i}}"></div>
+            <div class="light green" id="green{{i}}"></div>
+        </div>
+
+    </div>
+    {% endfor %}
+
+</div>
+
+<br>
+<a href="/analysis">
+    <button style="padding:10px 20px; font-size:16px;">
+        View Analysis
+    </button>
+</a>
+
+<!-- LIVE DASHBOARD SCRIPT -->
+<!-- ONLY SCRIPT PART CHANGED -->
+
+<script>
+let state = {
+    lane: 0,
+    green_time: 12,
+    start_time: 0,
+    local_start: Date.now() / 1000
+};
+
+// 🔥 SYNC SIGNAL
+function fetchSignal() {
+    fetch('/active_lane')
+    .then(res => res.json())
+    .then(data => {
+
+        if (data.start_time !== state.start_time) {
+            state = data;
+            state.local_start = Date.now() / 1000;
+        }
+
+    })
+    .catch(err => console.log("Signal Fetch Error:", err));
+}
+
+
+// 🔥 UPDATE DASHBOARD
+function updateDashboard() {
+
+    fetch('/lane_data')
+    .then(res => res.json())
+    .then(laneData => {
+
+        console.log("Lane Data:", laneData); // DEBUG
+
+        const totalLanes = Number("{{ videos|length }}");
+
+        const now = Date.now() / 1000;
+        let elapsed = now - state.local_start;
+
+        let remaining = Math.ceil(state.green_time - elapsed);
+        if (remaining < 0) remaining = 0;
+
+        let signal = remaining <= 2 ? "yellow" : "green";
+
+        // RESET LIGHTS
+        for (let i = 0; i < totalLanes; i++) {
+            document.getElementById("red"+i).classList.remove("active");
+            document.getElementById("yellow"+i).classList.remove("active");
+            document.getElementById("green"+i).classList.remove("active");
+        }
+
+        // APPLY SIGNAL
+        if (signal === "green") {
+            document.getElementById("green"+state.lane).classList.add("active");
+        } else {
+            document.getElementById("yellow"+state.lane).classList.add("active");
+        }
+
+        // OTHER LANES RED
+        for (let i = 0; i < totalLanes; i++) {
+            if (i !== state.lane) {
+                document.getElementById("red"+i).classList.add("active");
+            }
+        }
+
+        // 🔥 UPDATE TEXT SAFELY
+        for (let i = 0; i < totalLanes; i++) {
+
+            let lane = laneData[String(i)];
+
+            let info = document.getElementById("info"+i);
+
+            if (!lane) {
+                info.innerText = "Lane " + (i+1) + " | Waiting for data...";
+                continue;
+            }
+
+            let timeDisplay = (i === state.lane) ? remaining : "--";
+            let ambulanceText = lane.ambulance ? "Yes 🚑" : "No";
+
+            info.innerText =
+                "Lane " + (i+1) +
+                " | Density: " + (lane.density ?? 0) +
+                " | Vehicles: " + (lane.count ?? 0) +
+                " | Ambulance: " + ambulanceText +
+                " | Time: " + timeDisplay;
+        }
+
+    })
+    .catch(err => console.log("Data Fetch Error:", err));
+}
+
+
+// 🔥 TIMERS
+setInterval(fetchSignal, 3000);   // faster sync
+setInterval(updateDashboard, 1000);
+
+// 🔥 INITIAL
+fetchSignal();
+updateDashboard();
+</script>
+</body>
+</html>
