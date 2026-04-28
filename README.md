@@ -1,0 +1,2 @@
+# INTELLIGENT-TRAFFIC-MANAGEMENT-SYSTEM-USING-AI-WITH-AMBULANCE-DETECTION-
+This project presents an AI-based traffic management system designed to improve traffic flow at road intersections using real-time video analysis. System detects vehicles, calculates traffic density, and dynamically adjusts traffic signal timing. It also includes an ambulance detection feature to provide immediate priority to emergency vehicles.
