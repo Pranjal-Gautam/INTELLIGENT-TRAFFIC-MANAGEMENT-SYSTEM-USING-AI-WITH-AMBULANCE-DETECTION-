@@ -35,7 +35,7 @@ Improved traffic flow compared to fixed-time signals
 Reduced average waiting time
 Accurate vehicle detection in real-time
 Successful ambulance priority handling
-🚀 Future Scope
+Future Scope
 Traffic violation detection using number plate recognition
 Smart surveillance for investigation support
 Traffic analytics and reporting (daily/weekly insights)
